@@ -85,9 +85,15 @@ public class BCUserIdentityExtractorProvider  extends UserIdentityExtractorProvi
     class SubjectAltNameExtractorBCProvider extends SubjectAltNameExtractor {
 
         // User Principal Name. Used typically by Microsoft in certificates for Smart Card Login
-        private static final String UPN_OID = "1.3.6.1.4.1.311.20.2.3";
+        private static final String DEFAULT_DESIRED_OID = "1.3.6.1.4.1.311.20.2.3";
+
+        /**
+         * Integer representing the OtherName type in the Subject Alternative Name. See {@link X509Certificate#getSubjectAlternativeNames()}
+         */
+        public static final int OTHER_NAME_GENERAL_NAME = 0;
 
         private final int generalName;
+        private final String desiredOid;
 
         /**
          * Creates a new instance
@@ -96,6 +102,16 @@ public class BCUserIdentityExtractorProvider  extends UserIdentityExtractorProvi
          */
         SubjectAltNameExtractorBCProvider(int generalName) {
             this.generalName = generalName;
+            this.desiredOid = DEFAULT_DESIRED_OID;
+        }
+
+        /**
+         * Creates a new instance
+         * @param desiredOid Extract an OtherName with this Object Identifier
+         */
+        SubjectAltNameExtractorBCProvider(String desiredOid) {
+            this.generalName = OTHER_NAME_GENERAL_NAME;
+            this.desiredOid = desiredOid;
         }
 
         @Override
@@ -152,7 +168,7 @@ public class BCUserIdentityExtractorProvider  extends UserIdentityExtractorProvi
                                     tempOtherName = principalName.getString();
 
                                     // We found UPN among the 'otherName' principal. We don't need to look other
-                                    if (UPN_OID.equals(tempOid)) {
+                                    if (DEFAULT_DESIRED_OID.equals(tempOid)) {
                                         foundUpn = true;
                                         break;
                                     }
@@ -198,4 +214,8 @@ public class BCUserIdentityExtractorProvider  extends UserIdentityExtractorProvi
         return new SubjectAltNameExtractorBCProvider(generalName);
     }
 
+    @Override
+    public SubjectAltNameExtractor getSubjectAltNameExtractor(String otherNameOid) {
+        return new SubjectAltNameExtractorBCProvider(otherNameOid);
+    }
 }

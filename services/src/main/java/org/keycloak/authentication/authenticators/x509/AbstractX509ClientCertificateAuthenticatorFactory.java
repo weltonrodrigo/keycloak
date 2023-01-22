@@ -74,6 +74,7 @@ public abstract class AbstractX509ClientCertificateAuthenticatorFactory implemen
             MAPPING_SOURCE_CERT_SUBJECTDN_EMAIL,
             MAPPING_SOURCE_CERT_SUBJECTALTNAME_EMAIL,
             MAPPING_SOURCE_CERT_SUBJECTALTNAME_OTHERNAME,
+            MAPPING_SOURCE_CERT_SUBJECTALTNAME_OTHERNAME_WITH_OID,
             MAPPING_SOURCE_CERT_SUBJECTDN_CN,
             MAPPING_SOURCE_CERT_ISSUERDN,
             MAPPING_SOURCE_CERT_SERIALNUMBER,
@@ -125,6 +126,12 @@ public abstract class AbstractX509ClientCertificateAuthenticatorFactory implemen
         regExp.setLabel("A regular expression to extract user identity");
         regExp.setDefaultValue(DEFAULT_MATCH_ALL_EXPRESSION);
         regExp.setHelpText("The regular expression to extract a user identity. The expression must contain a single group. For example, 'uniqueId=(.*?)(?:,|$)' will match 'uniqueId=somebody@company.org, CN=somebody' and give somebody@company.org");
+
+        ProviderConfigProperty otherNameOid = new ProviderConfigProperty();
+        otherNameOid.setType(STRING_TYPE);
+        otherNameOid.setName(OTHERNAME_OID);
+        otherNameOid.setLabel("OID value when extracting from Subject Alternative Names");
+        otherNameOid.setHelpText("When using Subject Alternative Name as source for user identity, the value will be extracted from an OtherName entry with this Object Identifier. Regular expression is applied.");
 
         List<String> mapperTypes = new LinkedList<>();
         Collections.addAll(mapperTypes, userModelMappers);
@@ -245,6 +252,7 @@ public abstract class AbstractX509ClientCertificateAuthenticatorFactory implemen
                 canonicalDn,
                 serialnumberHex,
                 regExp,
+                otherNameOid,
                 userMapperList,
                 attributeOrPropertyValue,
                 timestampValidationValue,

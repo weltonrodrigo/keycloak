@@ -56,6 +56,7 @@ import org.keycloak.services.x509.X509ClientCertificateLookup;
 public abstract class AbstractX509ClientCertificateAuthenticator implements Authenticator {
 
     public static final String DEFAULT_ATTRIBUTE_NAME = "usercertificate";
+    public static final String DEFAULT_OTHERNAME_OID = "";
     protected static ServicesLogger logger = ServicesLogger.LOGGER;
 
     public static final String REGULAR_EXPRESSION = "x509-cert-auth.regular-expression";
@@ -69,11 +70,13 @@ public abstract class AbstractX509ClientCertificateAuthenticator implements Auth
     public static final String CRL_RELATIVE_PATH = "x509-cert-auth.crl-relative-path";
     public static final String OCSPRESPONDER_URI = "x509-cert-auth.ocsp-responder-uri";
     public static final String OCSPRESPONDER_CERTIFICATE = "x509-cert-auth.ocsp-responder-certificate";
+    public static final String OTHERNAME_OID = "x509-cert-auth.othername-object-identifier";
     public static final String MAPPING_SOURCE_SELECTION = "x509-cert-auth.mapping-source-selection";
     public static final String MAPPING_SOURCE_CERT_SUBJECTDN = "Match SubjectDN using regular expression";
     public static final String MAPPING_SOURCE_CERT_SUBJECTDN_EMAIL = "Subject's e-mail";
     public static final String MAPPING_SOURCE_CERT_SUBJECTALTNAME_EMAIL = "Subject's Alternative Name E-mail";
     public static final String MAPPING_SOURCE_CERT_SUBJECTALTNAME_OTHERNAME = "Subject's Alternative Name otherName (UPN)";
+    public static final String MAPPING_SOURCE_CERT_SUBJECTALTNAME_OTHERNAME_WITH_OID = "Subject's Alternative Name otherName with OID";
     public static final String MAPPING_SOURCE_CERT_SUBJECTDN_CN = "Subject's Common Name";
     public static final String MAPPING_SOURCE_CERT_ISSUERDN = "Match IssuerDN using regular expression";
     public static final String MAPPING_SOURCE_CERT_SERIALNUMBER = "Certificate Serial Number";
@@ -156,8 +159,10 @@ public abstract class AbstractX509ClientCertificateAuthenticator implements Auth
 
             X509AuthenticatorConfigModel.MappingSourceType userIdentitySource = config.getMappingSourceType();
             String pattern = config.getRegularExpression();
+            String otherNameOid = config.getOtherNameOid();
 
             UserIdentityExtractor extractor = null;
+            final UserIdentityExtractor intermediateExtractor;
             Function<X509Certificate[], String> func = null;
 
             UserIdentityExtractorProvider userIdExtractor = CryptoIntegration.getProvider().getIdentityExtractorProvider();
@@ -204,6 +209,12 @@ public abstract class AbstractX509ClientCertificateAuthenticator implements Auth
                     break;
                 case SUBJECTALTNAME_OTHERNAME:
                     extractor = userIdExtractor.getSubjectAltNameExtractor(0);
+                    break;
+                case SUBJECTALTNAME_OTHERNAME_WITH_OID:
+                    intermediateExtractor = userIdExtractor.getSubjectAltNameExtractor(otherNameOid);
+                    extractor = userIdExtractor.getPatternIdentityExtractor(DEFAULT_MATCH_ALL_EXPRESSION, certs -> {
+                        return (String) intermediateExtractor.extractUserIdentity(certs);
+                    });
                     break;
                 case CERTIFICATE_PEM:
                     extractor = userIdExtractor.getCertificatePemIdentityExtractor();

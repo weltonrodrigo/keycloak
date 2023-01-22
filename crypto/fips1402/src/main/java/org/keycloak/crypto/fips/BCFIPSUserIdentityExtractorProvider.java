@@ -85,7 +85,14 @@ public class BCFIPSUserIdentityExtractorProvider  extends UserIdentityExtractorP
     class SubjectAltNameExtractorBCProvider extends SubjectAltNameExtractor {
 
         // User Principal Name. Used typically by Microsoft in certificates for Smart Card Login
-        private static final String UPN_OID = "1.3.6.1.4.1.311.20.2.3";
+        private static final String DEFAULT_DESIRED_OID = "1.3.6.1.4.1.311.20.2.3";
+
+        /**
+         * Integer representing the OtherName type in the Subject Alternative Name. See {@link X509Certificate#getSubjectAlternativeNames()}
+         */
+        public static final int OTHER_NAME_GENERAL_NAME = 0;
+
+        private final String desiredOid;
 
         private final int generalName;
 
@@ -96,6 +103,16 @@ public class BCFIPSUserIdentityExtractorProvider  extends UserIdentityExtractorP
          */
         SubjectAltNameExtractorBCProvider(int generalName) {
             this.generalName = generalName;
+            this.desiredOid = DEFAULT_DESIRED_OID;
+        }
+
+        /**
+         * Creates a new instance
+         * @param desiredOid Extract an OtherName with this Object Identifier
+         */
+        SubjectAltNameExtractorBCProvider(String desiredOid) {
+            this.generalName = OTHER_NAME_GENERAL_NAME;
+            this.desiredOid = desiredOid;
         }
 
         @Override
@@ -113,11 +130,11 @@ public class BCFIPSUserIdentityExtractorProvider  extends UserIdentityExtractorP
 
                 Iterator<List<?>> iterator = subjectAlternativeNames.iterator();
 
-                boolean foundUpn = false;
+                boolean foundDesiredValue = false;
                 String tempOtherName = null;
                 String tempOid = null;
 
-                while (iterator.hasNext() && !foundUpn) {
+                while (iterator.hasNext() && !foundDesiredValue) {
                     List<?> next = iterator.next();
 
                     if (Integer.class.cast(next.get(0)) == generalName) {
@@ -151,9 +168,9 @@ public class BCFIPSUserIdentityExtractorProvider  extends UserIdentityExtractorP
 
                                     tempOtherName = principalName.getString();
 
-                                    // We found UPN among the 'otherName' principal. We don't need to look other
-                                    if (UPN_OID.equals(tempOid)) {
-                                        foundUpn = true;
+                                    // Found the entry we are looking for. No need to look further
+                                    if (desiredOid.equals(tempOid)) {
+                                        foundDesiredValue = true;
                                         break;
                                     }
                                 }
@@ -166,7 +183,7 @@ public class BCFIPSUserIdentityExtractorProvider  extends UserIdentityExtractorP
                     }
                 }
 
-                logger.tracef("Parsed otherName from subjectAltName. OID: '%s', Principal: '%s'", tempOid, tempOtherName);
+                logger.tracef("Parsed otherName from subjectAltName. OID: '%s', Value: '%s'", tempOid, tempOtherName);
 
                 return tempOtherName;
 
@@ -198,4 +215,8 @@ public class BCFIPSUserIdentityExtractorProvider  extends UserIdentityExtractorP
         return new SubjectAltNameExtractorBCProvider(generalName);
     }
 
+    @Override
+    public SubjectAltNameExtractor getSubjectAltNameExtractor(String otherNameOid) {
+        return new SubjectAltNameExtractorBCProvider(otherNameOid);
+    }
 }

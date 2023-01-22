@@ -60,6 +60,7 @@ public class X509AuthenticatorConfigModel extends AuthenticatorConfigModel {
         SUBJECTDN_EMAIL(MAPPING_SOURCE_CERT_SUBJECTDN_EMAIL),
         SUBJECTALTNAME_EMAIL(MAPPING_SOURCE_CERT_SUBJECTALTNAME_EMAIL),
         SUBJECTALTNAME_OTHERNAME(MAPPING_SOURCE_CERT_SUBJECTALTNAME_OTHERNAME),
+        SUBJECTALTNAME_OTHERNAME_WITH_OID(MAPPING_SOURCE_CERT_SUBJECTALTNAME_OTHERNAME_WITH_OID),
         SUBJECTDN(MAPPING_SOURCE_CERT_SUBJECTDN),
         SHA256_THUMBPRINT(MAPPING_SOURCE_CERT_SHA256_THUMBPRINT),
         SERIALNUMBER_ISSUERDN(MAPPING_SOURCE_CERT_SERIALNUMBER_ISSUERDN),
@@ -215,6 +216,18 @@ public class X509AuthenticatorConfigModel extends AuthenticatorConfigModel {
         } else {
             getConfig().remove(REGULAR_EXPRESSION);
         }
+        return this;
+    }
+
+    public String getOtherNameOid() {
+        return getConfig().getOrDefault(OTHERNAME_OID, DEFAULT_OTHERNAME_OID);
+    }
+
+    public X509AuthenticatorConfigModel setOtherNameOid(String value){
+        if (value != null)
+            getConfig().put(OTHERNAME_OID, value);
+        else
+            getConfig().remove(OTHERNAME_OID);
         return this;
     }
 

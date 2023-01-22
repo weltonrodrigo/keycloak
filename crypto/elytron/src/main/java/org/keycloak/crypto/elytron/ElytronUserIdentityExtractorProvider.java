@@ -74,9 +74,14 @@ public class ElytronUserIdentityExtractorProvider  extends UserIdentityExtractor
 
         // User Principal Name. Used typically by Microsoft in certificates for
         // Smart Card Login
-        private static final String UPN_OID = "1.3.6.1.4.1.311.20.2.3";
+        private static final String DEFAULT_DESIRED_OID = "1.3.6.1.4.1.311.20.2.3";
+        /**
+         * Integer representing the OtherName type in the Subject Alternative Name. See {@link X509Certificate#getSubjectAlternativeNames()}
+         */
+        public static final int OTHER_NAME_GENERAL_NAME = 0;
 
         private final int generalName;
+        private final String desiredOid;
 
         /**
          * Creates a new instance
@@ -86,6 +91,16 @@ public class ElytronUserIdentityExtractorProvider  extends UserIdentityExtractor
          */
         SubjectAltNameExtractorEltronProvider(int generalName) {
             this.generalName = generalName;
+            this.desiredOid = DEFAULT_DESIRED_OID;
+        }
+
+        /**
+         * Creates a new instance
+         * @param desiredOid Extract an OtherName with this Object Identifier
+         */
+        SubjectAltNameExtractorEltronProvider(String desiredOid) {
+            this.generalName = OTHER_NAME_GENERAL_NAME;
+            this.desiredOid = desiredOid;
         }
 
         @Override
@@ -132,7 +147,7 @@ public class ElytronUserIdentityExtractorProvider  extends UserIdentityExtractor
                                     case ASN1.OBJECT_IDENTIFIER_TYPE:
                                         String oid = derDecoder.decodeObjectIdentifier();
                                         logger.info("OID: " + oid);
-                                        if(UPN_OID.equals(oid)) {
+                                        if(desiredOid.equals(oid)) {
                                             derDecoder.decodeImplicit(160);
                                             byte[] sb = derDecoder.drainElementValue();
                                             while(!Character.isLetterOrDigit(sb[0])) {
@@ -186,4 +201,8 @@ public class ElytronUserIdentityExtractorProvider  extends UserIdentityExtractor
         return new SubjectAltNameExtractorEltronProvider(generalName);
     }
 
+    @Override
+    public SubjectAltNameExtractor getSubjectAltNameExtractor(String otherNameOid) {
+        return new SubjectAltNameExtractorEltronProvider(otherNameOid);
+    }
 }

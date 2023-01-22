@@ -144,4 +144,12 @@ public abstract class UserIdentityExtractorProvider {
      * @return the value from the subjectAltName extension
      */
     public abstract SubjectAltNameExtractor getSubjectAltNameExtractor(int generalName);
+
+    /**
+     * Obtains the subjectAltName given an <code>object identifier</code>.
+     *
+     * @param otherNameOid OID value of the OtherName to be extracted from the Subject Alternative Name list
+     * @return the value from the subjectAltName extension, from the OtherName with {@code otherNameOid}
+     */
+    public abstract SubjectAltNameExtractor getSubjectAltNameExtractor(String otherNameOid);
 }
